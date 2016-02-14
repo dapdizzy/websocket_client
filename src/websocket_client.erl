@@ -48,15 +48,17 @@ cast(Client, Frame) ->
                      Args :: list(), Opts :: opts()) ->
                             no_return().
 ws_client_init(Handler, Protocol, Host, Port, Path, Args, Opts) ->
+    io:format("~s~n", ["...Starting ws_client_init..."]),
     Transport = case Protocol of
                     wss ->
+                        io:format("~s~n", ["...Protocol is wss, so we stick to the ssl..."]),
                         ssl;
                     ws ->
                         gen_tcp
                 end,
     SockReply = case Transport of
                     ssl ->
-                        io:format("~s~n", ["Establishing SSL connection"]),
+                        io:format("~s~n", ["...Establishing SSL connection..."]),
                         res =
                         ssl:connect(Host, Port,
                                     [{mode, binary},
@@ -64,7 +66,7 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Opts) ->
                                      {active, false},
                                      {packet, 0}
                                     ], 6000),
-                        io:format("~s", ["SSL connection result:"]),
+                        io:format("~s", ["...SSL connection result:..."]),
                         io:nl(),
                         io:format("~s~n", [res]),
                         res;
@@ -78,7 +80,7 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Opts) ->
     {ok, Socket} = case SockReply of
                        {ok, Sock} -> {ok, Sock};
                        {error, _} = ConnectError ->
-                           io:format("~s", ["Connection error....."]),
+                           io:format("~s", ["...Connection error....."]),
                            io:nl(),
                            proc_lib:init_ack(ConnectError),
                            exit(normal)
