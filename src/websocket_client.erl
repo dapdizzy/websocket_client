@@ -71,6 +71,7 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args, Opts) ->
                         io:format("~s~n", [res]),
                         res;
                     gen_tcp ->
+                        io:format("~s~n", ["...Establishing TCP connection..."]),
                         gen_tcp:connect(Host, Port,
                                         [binary,
                                          {active, false},
