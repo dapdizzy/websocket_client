@@ -191,8 +191,27 @@ init([Protocol, Host, Port, Path, Handler, HandlerArgs, Opts]) ->
                   handler   = {Handler, HState},
                   reconnect = Reconnect
                  },
+    set_proxy_options(), % Sets proxy options retrieved from the environment variables.
     Connect andalso gen_fsm:send_event(self(), connect),
     {ok, disconnected, Context0}.
+
+set_proxy_options() ->
+  Proxy = os:getenv("http_proxy", ""),
+  case Proxy of
+    "" -> nothing;
+    ProxyAddress ->
+      PortNumber =
+      case http_uri:parse(ProxyAddress) of
+        {ok, ParseResult} ->
+          {_Scheme, _UserInfo, _Host, Port, _Path, _Query} = ParseResult,
+          Port;
+        _ -> 80 % Default value for port
+      end,
+      io:format("The value of Proxy is: ~p.", [ProxyAddress]),
+      io:format("The value of Proxy Port Number is: ~p.", [PortNumber]),
+      httpc:set_options([{proxy, {{ProxyAddress, PortNumber}, ["localhost"]}}])
+  end
+  .
 
 -spec transport(ws | wss, {verify | verify_fun, term()},
                 list(inet:option())) -> #transport{}.
@@ -569,4 +588,3 @@ maybe_cancel_reconnect(Context=#context{reconnect_tref=undefined}) ->
 maybe_cancel_reconnect(Context=#context{reconnect_tref=Tref}) when is_reference(Tref) ->
     gen_fsm:cancel_timer(Tref),
     Context#context{reconnect_tref=undefined}.
-
